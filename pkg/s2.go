@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Helper methods and structs for working with S2 Geometry
 package main
 
 import (
@@ -20,10 +21,10 @@ import (
 	"github.com/golang/geo/s2"
 )
 
-// LatLng Object
+// LatLng struct
 type LatLng struct {
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"lng"`
+	Lat float64 `json:"latitude"`
+	Lng float64 `json:"longitude"`
 }
 
 // LatLngBounds contains two LatLngs
@@ -32,8 +33,10 @@ type LatLngBounds struct {
 	Southwest LatLng `json:"southwest"`
 }
 
-// ToS2Cell Converts LatLng to S2 Cell
+// ToS2Cell Converts LatLng to a single S2 Cell and raises and error if more than
+// a single cell is found
 func (bounds LatLngBounds) ToS2Cell() (s2.CellID, error) {
+	// This is an approximation. No guarantee to have a single cell
 	rc := &s2.RegionCoverer{MinLevel: 11, MaxLevel: 14, MaxCells: 1}
 
 	r := s2.EmptyRect()
@@ -44,5 +47,6 @@ func (bounds LatLngBounds) ToS2Cell() (s2.CellID, error) {
 	if len(cells) > 1 {
 		return 0, errors.New("area_filter_lat_lng_bounds spans multiple S2 cells")
 	}
+
 	return cells[0], nil
 }
