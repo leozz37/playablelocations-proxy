@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Handlers for the server endpoints and conversion method for request to match gRPC SamplePlayableLocationsRequest
 package main
 
 import (
@@ -25,20 +26,31 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// LatLngSamplePlayableLocationsRequest is similar to the SamplePlayableLocationsRequest except for the custom AreaFilterLatLngBounds
+// LatLngSamplePlayableLocationsRequest is similar to the SamplePlayableLocationsRequest
+// except for the custom AreaFilterLatLngBounds
 type LatLngSamplePlayableLocationsRequest struct {
-	AreaFilterLatLngBounds LatLngBounds        `json:"area_filter_lat_lng_bounds"`
-	Criteria               []*sample.Criterion `protobuf:"bytes,2,rep,name=criteria,proto3" json:"criteria,omitempty"`
+	playablelocations.SamplePlayableLocationsRequest
+	AreaFilterLatLngBounds *LatLngBounds `json:"area_filter_lat_lng_bounds,omitempty"`
 }
 
 // ToSamplePlayableLocationsRequest convert request to SamplePlayableLocationsRequest
+// by converting the AreaFilterLatLngBounds field to an AreaFilter containing a S2CellId
 func (request LatLngSamplePlayableLocationsRequest) ToSamplePlayableLocationsRequest() (*playablelocations.SamplePlayableLocationsRequest, error) {
-	s2CellID, err := request.AreaFilterLatLngBounds.ToS2Cell()
-	if err != nil {
-		return nil, err
+	if request.AreaFilterLatLngBounds != nil {
+		s2CellID, err := request.AreaFilterLatLngBounds.ToS2Cell()
+		if err != nil {
+			return nil, err
+		}
+		// instantiate struct if necessary
+		if request.AreaFilter == nil {
+			request.AreaFilter = &sample.AreaFilter{}
+		}
+
+		request.AreaFilter.S2CellId = uint64(s2CellID)
 	}
+
 	return &playablelocations.SamplePlayableLocationsRequest{
-		AreaFilter: &sample.AreaFilter{S2CellId: uint64(s2CellID)},
+		AreaFilter: request.AreaFilter,
 		Criteria:   request.Criteria,
 	}, nil
 }
