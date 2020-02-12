@@ -1,3 +1,5 @@
+![Apache-2.0](https://img.shields.io/badge/license-Apache-blue)
+
 # Playable Locations Proxy Server
 
 A proxy implementation for the [Playable Locations API]. The implemenation allows converting latitude and longitude bounds to a single S2 cell id. Additionally, the proxy can be used extended to cache and route user requests through a central location.
